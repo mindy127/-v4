@@ -1,0 +1,249 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>引擎組裝站 主管監控（模擬）</title>
+<style>
+:root{--bg:#0a1020;--p:#121a2e;--l:#26324f;--t:#e6ebf5;--m:#8b97b5;--ok:#34d399;--op:#ef4444;--sy:#f59e0b;--ac:#38bdf8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font:14px/1.5 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--l);flex-wrap:wrap}
+h1{font-size:19px;margin:0;color:var(--ac)}.tag{background:#16223d;border:1px solid var(--l);border-radius:6px;padding:1px 8px;font-size:12px;color:var(--m)}
+#chip{margin-left:auto;padding:2px 12px;border-radius:99px;background:#16223d;border:1px solid var(--l)}
+.bar{display:flex;gap:10px;flex-wrap:wrap;padding:10px 16px;background:var(--p);border-bottom:1px solid var(--l)}
+label{display:flex;flex-direction:column;font-size:12px;color:var(--m);gap:2px}
+select,button,textarea{background:#0d1426;color:var(--t);border:1px solid var(--l);border-radius:6px;padding:5px 8px;font:inherit}
+button{cursor:pointer}button:hover{border-color:var(--ac)}button.on{background:var(--ac);color:#04121c;border-color:var(--ac)}button:disabled{opacity:.4;cursor:default}
+:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+main{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);gap:12px;padding:12px 16px}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--p);border:1px solid var(--l);border-radius:8px;padding:10px 12px;margin-bottom:12px}
+.hf{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.hf select,.hf textarea{width:100%}
+.two{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}.two>*{flex:1 1 280px;min-width:0}#pipw{position:relative;border:2px solid var(--l);border-radius:6px;overflow:hidden}#cv2{width:100%;aspect-ratio:16/9;display:block;background:#050912}#pipl{position:absolute;left:6px;top:6px;font-size:12px;background:#0c1730dd;padding:1px 6px;border-radius:5px}
+[hidden]{display:none!important}.tabs{display:flex;gap:6px;padding:8px 16px 0;border-bottom:1px solid var(--l)}.tabs button{border-radius:6px 6px 0 0;border-bottom:none}
+.hb{display:grid;grid-template-columns:130px 1fr 32px;gap:6px;align-items:center;margin:5px 0;font-size:12px}.hb i{display:block;height:12px;border-radius:3px;background:var(--op)}.hb i.y{background:var(--sy)}.hb b{text-align:right}
+.hg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.hc{border:2px solid;border-radius:8px;padding:8px;text-align:center}.hc b{font-size:18px}.hc small{display:block;color:var(--m);font-size:11px}
+.hg2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.sc{border:1px solid var(--l);border-top:3px solid #fb923c;border-radius:8px;padding:8px;font-size:12px}.sc.up{border-top-color:#2dd4bf}.sc small{color:var(--m)}.sc .r{display:flex;justify-content:space-between;margin-top:2px}.sc .okr{color:var(--ok);border-top:1px dashed var(--l);margin-top:6px;padding-top:4px}.sc .lv{margin-top:4px;color:var(--m)}
+.card h3{margin:0 0 6px;font-size:14px;color:var(--ac)}
+#stage{position:relative;height:56vh;min-height:360px;border-radius:8px;overflow:hidden;border:1px solid var(--l);background:#050912}
+#cv{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#lbl div{position:absolute;left:0;top:0;white-space:nowrap;font-size:11px;line-height:1.3;padding:2px 6px;border-radius:5px;background:#0c1730dd;border:1px solid #38bdf866;pointer-events:none}
+#lbl div.e{background:#5b1111ee;border-color:var(--op)}#lbl div.w{background:#5a3a08ee;border-color:var(--sy)}#lbl div.dt{width:11px;height:11px;padding:0;border-radius:50%;border:1px solid #fff}#lbl div.c0{background:#6b7280}#lbl div.c1{background:#facc15}#lbl div.c2{background:#38bdf8}#lbl div.c3{background:#34d399}#lbl div.s{font-size:10px;padding:0 4px;opacity:.85}
+#banner{position:absolute;left:8px;right:8px;top:8px;padding:8px 12px;border-radius:8px;font-weight:700;background:#5b1111f2;border:2px solid var(--op)}
+#banner.sys{background:#5a3a08f2;border-color:var(--sy)}#banner small{display:block;font-weight:400}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+#tl{position:relative;flex:1;min-width:200px}#tl input{width:100%}#ck{position:absolute;top:-2px;width:2px;height:22px;background:var(--sy);pointer-events:none}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.kv div{background:#0d1426;border-radius:6px;padding:6px 8px}.kv b{display:block;font-size:16px}.kv span{font-size:11px;color:var(--m)}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:3px 4px;border-bottom:1px solid var(--l)}th{color:var(--m);font-weight:400}
+.bad{color:var(--op)}.warn{color:var(--sy)}.good{color:var(--ok)}
+details summary{cursor:pointer;color:var(--ac)}details label{flex-direction:row;align-items:center;gap:6px;color:var(--t);font-size:13px}
+#flash{position:fixed;inset:0;border:8px solid transparent;pointer-events:none;z-index:9}
+body.op #flash{border-color:var(--op);animation:fl 1s infinite}body.sys #flash{border-color:var(--sy);animation:fl 1s infinite}
+@keyframes fl{50%{opacity:.15}}@media(prefers-reduced-motion:reduce){#flash{animation:none!important}}
+@media print{body>*:not(#print){display:none}}
+</style></head><body>
+<div id="flash"></div>
+<header><h1>引擎組裝站 主管監控</h1><span class="tag">模擬資料 · v1.0</span><div id="chip">待機</div></header><nav class="tabs"><button id="t1" class="on">即時監控</button><button id="t2">品質總覽</button></nav>
+<section class="bar" id="bar">
+<label>工位<select id="stn"><option>ENG-07</option></select></label><label>左側作業員編號<select id="opL"></select></label><label>右側作業員編號<select id="opR"></select></label>
+<label>VIN 車身號碼<select id="wo"></select></label><label>序號條碼<select id="sn"></select></label>
+<label>選擇配方<select id="job"><option>WI-1 (鎖附)</option><option disabled>WI-2 (檢測，未啟用)</option></select></label>
+<label>情境<select id="sc"><option value="normal">正常流程</option><option value="early">降前鎖附</option><option value="over">超過鎖附時間</option><option value="wrong">錯誤步驟</option><option value="torque">扭力不足</option><option value="sysA">系統異常 A：機器手臂訊號中斷</option><option value="sysB">系統異常 B：視覺與 IoT 不一致</option><option value="sysC">系統異常 C：機器手臂訊號中斷</option></select></label>
+</section>
+<main id="pg1">
+<div>
+<div id="stage"><canvas id="cv"></canvas><div id="lbl"></div><div id="banner" hidden></div></div>
+<div class="row"><button id="play">播放</button><button id="rst">重置</button>
+<span id="spd"><button data-s="1" class="on">1x</button> <button data-s="2">2x</button> <button data-s="4">4x</button></span>
+<span><button data-v="0">斜視</button> <button data-v="1">俯視</button> <button data-v="2">側視（看承盤）</button></span></div>
+<div class="row"><div id="tl"><input id="sl" type="range" min="0" max="180" step="0.5" value="0" aria-label="時間軸"><div id="ck" title="檢查點"></div><small style="color:var(--m)">週期 8:00 · 偵測範圍 0:00–3:00 · 橘線為檢查點（承盤下降）</small></div></div>
+<div class="two"><details class="card"><summary>顯示與聲音設定</summary><div class="row">
+<label><input type="checkbox" id="tt" checked>工具標籤</label><label><input type="checkbox" id="th" checked>孔位狀態點與承盤標籤</label>
+<label><input type="checkbox" id="tc" checked>攝影機視角</label><label><input type="checkbox" id="tk" checked>檢查點標示</label>
+<label><input type="checkbox" id="tb">蜂鳴器聲音</label></div>
+<div class="row"><button id="dL">模擬機器手臂L斷線</button><button id="dR">模擬機器手臂R斷線</button></div></details><div class="card"><h3>異常特寫（攝影機視角）</h3><div id="pipw"><canvas id="cv2"></canvas><div id="pipl">LEFT UP · 待命</div></div><div class="row" id="pb"><button data-p="-1" class="on">自動</button><button data-p="0">LEFT UP</button><button data-p="1">RIGHT UP</button><button data-p="2">RIGHT</button></div><small style="color:var(--m)">自動：異常時切到發生側的攝影機並拉近；也可手動固定某支攝影機。</small></div></div>
+</div>
+<div id="print">
+<div class="card"><div class="kv"><div><span>模擬時間</span><b id="k1"></b></div><div><span>階段 / 承盤</span><b id="k2"></b></div><div><span>檢查點倒數</span><b id="k3"></b></div><div><span>本車異常數</span><b id="k4"></b></div><div><span>IoT 鎖附紀錄</span><b id="k5"></b></div><div><span>流程狀態</span><b id="k6"></b></div></div></div>
+<div class="card"><h3>裝置連線狀態</h3><table id="dev"></table></div>
+<div class="card"><h3>異常事件</h3><table id="evt"></table>
+<div class="hf"><label>處理主管<select id="hd"></select></label><label>原因分類<select id="rs"></select></label><label>升級時限（模擬秒）<select id="esc"><option value="30">30</option><option value="60" selected>60</option><option value="120">120</option></select></label><label style="grid-column:1/-1">備註<textarea id="nt" rows="2"></textarea></label><button id="ack" disabled style="grid-column:1/-1">確認並解除</button></div><small style="color:var(--m)">異常發生後才能按「確認並解除」。</small></div>
+<div class="card"><h3>鎖附紀錄（IoT）</h3><div id="spec" class="hg2"></div><table id="rec" style="margin-top:10px"></table></div>
+<div class="card"><h3>匯出本次紀錄</h3><div class="row"><button id="xr">事件摘要報告</button><button id="xc">匯出 CSV</button><button id="xp">列印 / 存 PDF</button></div><small style="color:var(--m)">內容：基本資訊、異常事件、處置、每孔位扭矩與角度。所有資料皆為模擬。</small></div>
+</div></main>
+<section id="pg2" hidden style="padding:12px 16px"><div class="row"><label style="flex-direction:row;align-items:center;gap:6px;color:var(--t)"><input type="checkbox" id="sdemo" checked>包含示範資料</label><label style="flex-direction:row;align-items:center;gap:6px;color:var(--t)">示範情境<select id="sbase"><option value="after">導入後（假設）</option><option value="before">導入前（降前鎖附 24%，取自訪談）</option></select></label><button id="sreset">重置本次累計</button><button id="spdf">匯出 PDF 報告摘要</button><small style="color:var(--m)">按下後在列印視窗的「目的地」選「另存為 PDF」</small><small id="smeta" style="color:var(--m)"></small></div>
+<div class="kv" id="skpi"></div>
+<div class="two" style="margin-top:12px"><div class="card"><h3>系統攔截的異常類型</h3><div id="sdist"></div></div><div class="card"><h3>孔位通過率（依異常發生孔位）</h3><div id="shole" class="hg"></div></div></div>
+<div class="card"><h3>一次通過率趨勢（每 10 台滾動）</h3><div id="strend"></div></div>
+<small style="color:var(--m)">一次通過＝該台無作業異常（含扭力不足）；系統異常另列於系統可用率，不計入良率。示範資料皆為模擬：「導入前」的降前鎖附 24% 取自訪談，其餘比例與整個「導入後」情境都是假設，不是實測。作業異常多數是系統成功攔截到的人員操作問題，不是系統本身出錯。孔位顏色門檻（98%、90%）為示範設定。跑完一台完整流程後，結果會自動加入本次累計。</small></section>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=s=>document.querySelector(s),T_END=180,CK=80,DS=4,LIM=CK-2,HB=5,RATE=5,Y0=-.35,TQ_MIN=2.3;
+const H={L1:[-.78,.22],L2:[-.5,.04],R1:[.8,-.02],R2:[.52,-.2]};
+const WOS={'TWPA2026A00010246':['SN-98287','SN-98288'],'TWPA2026A00010247':['SN-98289','SN-98301'],'TWPA2026A00010248':['SN-98302','SN-98410']};
+const RS={作業:['操作疏失','節拍壓力','SOP 不清楚','工具設定／磨耗','其他'],系統:['網路中斷','裝置無回應','資料寫入失敗','其他']};
+const LV=['現場主管','廠長','設備／品管部門'],dm=s=>Math.floor(s/60)+' 分 '+Math.floor(s%60)+' 秒';
+const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+const fill=(e,a)=>e.innerHTML=a.map(x=>`<option>${x}</option>`).join('');
+const ease=x=>{x=Math.min(1,Math.max(0,x));return x*x*(3-2*x)};
+const SD={L:'左',R:'右'};
+const SP={L1:{n:'左下螺絲',z:'Z1L',st:1,ps:1,tq:65},R1:{n:'右下螺絲',z:'Z1R',st:1,ps:1,tq:65},L2:{n:'左上螺絲',z:'Z2L',st:3,ps:2,tq:90},R2:{n:'右上螺絲',z:'Z2R',st:3,ps:2,tq:90}},TOL=10,AL=30,AH=120;
+const lo=h=>SP[h].tq*(1-TOL/100),hi=h=>SP[h].tq*(1+TOL/100),HN=Object.fromEntries(Object.entries(SP).map(([k,v])=>[k,v.n])),dn=t=>String(t??'').replace(/[LR][12]/g,m=>HN[m]);
+$('#spec').innerHTML=['L1','R1','L2','R2'].map(h=>{const c=SP[h];return`<div class="sc ${c.st===1?'':'up'}"><b>${c.n}</b> <small>${c.z} · 步驟 ${c.st} · 1 顆 · Pset ${c.ps}</small><div class="r"><span>目標扭力</span><b>${c.tq} N·m</b></div><div class="r"><span>扭力容差 ±</span><b>${TOL} %</b></div><div class="r"><span>角度下限</span><b>${AL}°</b></div><div class="r"><span>角度上限</span><b>${AH}°</b></div><div class="okr">判 OK：<b>${lo(h).toFixed(1)}–${hi(h).toFixed(1)} N·m</b>，角度 <b>${AL}–${AH}°</b></div><div class="lv" id="lv-${h}">本車尚未鎖附</div></div>`}).join('');
+['#opL','#opR'].forEach(s=>fill($(s),['OP-001','OP-002','OP-003','OP-004']));$('#opR').value='OP-002';
+fill($('#wo'),Object.keys(WOS));$('#rs').innerHTML=Object.entries(RS).map(([k,v])=>`<optgroup label="${k}異常">${v.map(x=>`<option>${x}</option>`).join('')}</optgroup>`).join('');fill($('#hd'),['SUP-01 現場主管','SUP-02 現場主管','MGR-01 廠長','QA-01 品管']);const snF=()=>fill($('#sn'),WOS[$('#wo').value]);snF();
+const OP=()=>({L:$('#opL').value,R:$('#opR').value});
+let S,VIS,playing=false,speed=1,acc=0,sig='';
+function vis(){const sc=$('#sc').value,v={L:[['L1',8,68],['L2',86,148]],R:[['R1',8,72],['R2',86,152]]};
+if(sc==='early')v.L[1]=['L2',72,134];if(sc==='over')v.R=[['R1',8,95],['R2',98,160]];
+if(sc==='wrong')v.R=[['R2',12,40],['R1',44,74],['R2',86,152]];return v}
+function reset(){VIS=vis();S={t:0,alert:null,ev:[],raised:new Set(),rec:[],vis:{L:{},R:{}},hb:{L:0,R:0},down:{L:false,R:false},fixA:0};playing=false;acc=0;$('#play').textContent='播放'}
+const REST={L:[-1.05,.6,.3],R:[1.05,.6,.3]},HY=Y0+.14,lp=(a,b,k)=>a.map((v,i)=>v+(b[i]-v)*k);
+function tool(sd,t){let p=REST[sd],hole=null;
+for(const[h,s,e]of VIS[sd]){const q=[H[h][0],HY,H[h][1]];
+if(t>=s-2&&t<s)p=lp(REST[sd],q,(t-s+2)/2);else if(t>=s&&t<e){p=q;hole=h}else if(t>=e&&t<e+2)p=lp(q,REST[sd],(t-e)/2)}
+return{p,hole}}
+function hst(h,t){let r=0;for(const[k,s,e]of VIS[h[0]])if(k===h&&t>=s)r=t>=e?3:t>=s+10?2:1;return r}
+function raise(cls,type,sd,exp,act,dev){const k=type+sd+act;if(S.alert||S.raised.has(k))return;S.raised.add(k);
+const ev={id:S.ev.length+1,t:S.t,cls,type,sd,op:OP()[sd],exp,act,phase:S.t<CK+DS?1:2,dev:dev||'-',status:'未處理',age:0,esc:[],k};S.ev.push(ev);S.alert=ev;beep()}
+function step(dt){if(S.alert||S.t>=T_END)return;S.t=Math.min(T_END,S.t+dt);const t=S.t,sc=$('#sc').value,down=t>=CK+DS;
+['L','R'].forEach(sd=>{
+if(sc==='sysA'&&sd==='L'&&t>=30&&!S.fixA)S.down.L=true;
+if(sc==='sysC'&&sd==='R'&&t>=100&&!S.fixC)S.down.R=true;
+if(!S.down[sd])S.hb[sd]=t;else if(t-S.hb[sd]>HB)raise('系統','機器手臂訊號中斷',sd,`每 ${HB} 秒心跳`,'心跳逾時','機器手臂'+sd);
+VIS[sd].forEach(([h,s,e])=>{if(t>=e&&!S.vis[sd][h+s]){S.vis[sd][h+s]=1;S.vis[sd][h]=1;
+if(!S.down[sd]){if(sc==='sysB'&&h==='R1')raise('系統','視覺與 IoT 不一致',sd,'IoT 鎖附訊號 '+h,`視覺已離開 ${h}，無 IoT 紀錄`,'機器手臂'+sd);
+else{const sp=SP[h],tq=+(sc==='torque'&&h==='L1'?sp.tq*(.8+Math.random()*.04):sp.tq*(.97+Math.random()*.06)).toFixed(1),ang=Math.round(55+Math.random()*35),ng=tq<lo(h)||tq>hi(h)||ang<AL||ang>AH;S.rec.push({op:OP()[sd],hole:h,t:e,dur:e-s,tq:tq.toFixed(1),ang,ok:ng?'NG':'OK'});if(ng)raise('作業','扭力不足',sd,`扭矩 ${lo(h).toFixed(1)}–${hi(h).toFixed(1)} N·m、角度 ${AL}–${AH}°`,`${h} 實測 ${tq.toFixed(1)} N·m／${ang}°`,'機器手臂'+sd)}}}});
+const{hole}=tool(sd,t);if(!hole)return;const n=hole[1];
+if(n==='2'&&!down&&S.vis[sd][sd+'1'])raise('作業','降前鎖附',sd,sd+'2（待承盤下降後）',hole);
+else if(n==='2'&&!down&&!S.vis[sd][sd+'1'])raise('作業','錯誤步驟',sd,sd+'1',hole);
+if(n==='1'&&t>=LIM)raise('作業','超過鎖附時間',sd,'檢查點前 2 秒完成',hole)})}
+function seek(x){if(x<S.t)reset();while(S.t<x&&!S.alert&&S.t<T_END)step(.25)}
+let ac;function beep(){if(!$('#tb').checked)return;try{ac=ac||new AudioContext();const o=ac.createOscillator();o.connect(ac.destination);o.frequency.value=880;o.start();o.stop(ac.currentTime+.4)}catch(e){}}
+// ---- 3D ----
+const stage=$('#stage'),renderer=new THREE.WebGLRenderer({canvas:$('#cv'),antialias:true}),scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(45,1,.1,100);
+scene.background=new THREE.Color(0x050912);scene.add(new THREE.AmbientLight(0xffffff,.75));const dl=new THREE.DirectionalLight(0xffffff,.8);dl.position.set(3,6,5);scene.add(dl);
+const mat=(c,o)=>new THREE.MeshLambertMaterial({color:c,transparent:o<1,opacity:o||1});
+const box=(w,h,d,c,x,y,z,o,g)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(c,o));m.position.set(x,y,z);(g||scene).add(m);return m};
+const grid=new THREE.GridHelper(24,24,0x26324f,0x172036);grid.position.y=-1.42;scene.add(grid);
+[-1,1].forEach(s=>{box(.9,.12,3.2,0x4b5b78,s*1.3,-.06,0);[1.4,-1.4].forEach(z=>box(.08,1.3,.08,0x334155,s*1.7,-.7,z));box(.05,.05,3.2,0xfacc15,s*1.72,.5,0);box(.12,.1,24,0x64748b,s*.97,-1.37,0)});
+const car=new THREE.Group();scene.add(car);
+box(1.9,.45,4.2,0x3b82f6,0,-.575,-1.5,.5,car);box(1.8,.5,1.5,0x94a3b8,0,-.1,-2.2,.45,car);box(1.9,.04,.9,0x2563eb,0,Y0+.35,-.75,.8,car).rotation.x=-1.15;
+box(.72,.18,.44,0x94a3b8,0,Y0+.09,0,1,car);for(let i=-3;i<=3;i++)box(.02,.2,.46,0x1e293b,i*.1,Y0+.09,0,1,car);
+[-1,1].forEach(s=>[.35,-2.3].forEach(z=>{const w=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.2,20),mat(0x111827));w.rotation.z=Math.PI/2;w.position.set(s*.9675,-1,z);car.add(w)}));
+const hm={},rg={};for(const h in H){const[x,z]=H[h];hm[h]=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.04,16),mat(0x6b7280));hm[h].position.set(x,Y0+.02,z);car.add(hm[h]);
+rg[h]=new THREE.Mesh(new THREE.RingGeometry(.09,.115,24),new THREE.MeshBasicMaterial({color:0xffffff,side:2}));rg[h].rotation.x=-Math.PI/2;rg[h].position.set(x,Y0+.035,z);car.add(rg[h])}
+const carrier=box(1.4,.08,1.1,0xfb923c,0,-.5,0,.8);
+const gun={},arm={};
+['L','R'].forEach(sd=>{const s=sd==='L'?-1:1,g=new THREE.Group();
+const wk=(w,h,d,c,y)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(w,w,h,14),mat(c));m.position.set(s*1.12,y,.3);g.add(m)};
+wk(.11,.85,0,0x1e3a5f,.425);wk(.19,.65,0,0x2563eb,1.175);
+const hd=new THREE.Mesh(new THREE.SphereGeometry(.13,14,10),mat(0xf1c7a1));hd.position.set(s*1.12,1.62,.3);g.add(hd);
+const hl=new THREE.Mesh(new THREE.SphereGeometry(.15,14,8,0,6.29,0,1.57),mat(0xfacc15));hl.position.set(s*1.12,1.65,.3);g.add(hl);scene.add(g);
+gun[sd]=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.3,10),mat(0x38bdf8));scene.add(gun[sd]);
+arm[sd]=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0x94a3b8}));scene.add(arm[sd])});
+const camG=new THREE.Group();scene.add(camG);const CAMS=[['LEFT UP',[-1.5,1.3,2.4],[-.7,Y0,.1]],['RIGHT UP',[1.5,1.3,2.4],[.7,Y0,.1]],['RIGHT',[3,.3,1.2],[0,-.5,0]]];
+CAMS.forEach(([n,p,t])=>{box(.2,.15,.25,0xe2e8f0,p[0],p[1],p[2],1,camG);const v=[];const c=[[-.3,0,-.4],[.3,0,-.4],[.3,0,.4],[-.3,0,.4]];c.forEach(o=>v.push(new THREE.Vector3(...p),new THREE.Vector3(t[0]+o[0],t[1],t[2]+o[2])));
+camG.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(v),new THREE.LineBasicMaterial({color:0x4ade80,transparent:true,opacity:.5})))});
+let az=.45,el=.55,R=7.5;const tgt=new THREE.Vector3(0,-.4,.1),PRE=[[.45,.55,7.5],[0,1.5,7],[1.57,.12,7]];
+function placeCam(){camera.position.set(tgt.x+R*Math.cos(el)*Math.sin(az),tgt.y+R*Math.sin(el),tgt.z+R*Math.cos(el)*Math.cos(az));camera.lookAt(tgt)}
+document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>[az,el,R]=PRE[b.dataset.v]);
+let drag=null;const cv=$('#cv');cv.onpointerdown=e=>{drag=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)};cv.onpointerup=()=>drag=null;
+cv.onpointermove=e=>{if(!drag)return;az-=(e.clientX-drag[0])*.007;el=Math.min(1.5,Math.max(.05,el+(e.clientY-drag[1])*.007));drag=[e.clientX,e.clientY]};
+cv.onwheel=e=>{e.preventDefault();R=Math.min(14,Math.max(3,R+e.deltaY*.005))};
+function size(){if(!stage.clientWidth)return;renderer.setSize(stage.clientWidth,stage.clientHeight,false);camera.aspect=stage.clientWidth/stage.clientHeight;camera.updateProjectionMatrix();const pw=$('#pipw').clientWidth;r2.setSize(pw,pw*9/16,false)}addEventListener('resize',size);
+// labels
+const items=[];const lab=(cat,get,txt,cls)=>{const d=document.createElement('div');$('#lbl').appendChild(d);items.push({d,cat,get,txt,cls})};
+['L','R'].forEach(sd=>lab('t',()=>{const p=tool(sd,S.t).p;return new THREE.Vector3(p[0],p[1]+.45,p[2])},()=>{const a=S.alert,h=tool(sd,S.t).hole;return`<b>機器手臂${sd} · ${OP()[sd]}</b><br>`+(S.down[sd]?'⚠ 未偵測到（IoT 失聯）':h?'重疊：'+HN[h]:'待命')},()=>S.down[sd]||(S.alert&&S.alert.cls==='系統'&&S.alert.sd===sd)?'w':S.alert&&S.alert.cls==='作業'&&S.alert.sd===sd?'e':''));
+const HS=['未鎖','鬆放','鎖附中','已鎖'],hot=h=>S.alert&&(S.alert.act.includes(h)||S.alert.exp.includes(h));
+for(const h in H)lab('h',()=>new THREE.Vector3(H[h][0],Y0+.1,H[h][1]).add(car.position),()=>hot(h)?`${HN[h]} ${HS[hst(h,S.t)]}`:'',()=>hot(h)?(S.alert.cls==='系統'?'w':'e'):'dt c'+hst(h,S.t));
+lab('p',()=>new THREE.Vector3(0,carrier.position.y-.15,0),()=>'承盤 '+(S.t<CK?'支撐中':S.t<CK+DS?'下降中':'已下降'),()=>'s');
+CAMS.forEach(([n,p])=>lab('c',()=>new THREE.Vector3(...p).add(new THREE.Vector3(0,.25,0)),()=>'Camera '+n,()=>'s'));
+const COL=[0x6b7280,0xfacc15,0x38bdf8,0x34d399];
+function draw(){const t=S.t,a=S.alert;
+car.position.z=t<6?-10*(1-ease(t/6)):t>=168?10*ease((t-168)/8):0;carrier.position.y=-.5-.42*ease((t-CK)/DS);
+for(const h in H){hm[h].material.color.setHex(COL[hst(h,t)]);rg[h].material.color.setHex(a&&a.act===h?0xef4444:0xffffff)}
+['L','R'].forEach(sd=>{const p=tool(sd,t).p;gun[sd].position.set(p[0],p[1]+.15,p[2]);
+gun[sd].material.color.setHex(S.down[sd]?0x6b7280:a&&a.sd===sd?(a.cls==='系統'?0xf59e0b:0xef4444):0x38bdf8);
+arm[sd].geometry.setFromPoints([new THREE.Vector3(REST[sd][0]*.95,1.4,.3),new THREE.Vector3(p[0],p[1]+.3,p[2])])});
+camG.visible=$('#tc').checked;placeCam();renderer.render(scene,camera);
+const W=stage.clientWidth,Hh=stage.clientHeight,on={t:$('#tt').checked,h:$('#th').checked,c:$('#tc').checked,p:$('#th').checked};
+const placed=[];items.forEach(i=>{const v=i.get().project(camera);const show=on[i.cat]&&v.z<1;i.d.style.display=show?'block':'none';if(!show)return;i.d.innerHTML=i.txt();i.d.className=i.cls();
+let x=(v.x+1)/2*W,y=(1-v.y)/2*Hh;const w=i.d.offsetWidth,h=i.d.offsetHeight;x=Math.min(W-w/2-2,Math.max(w/2+2,x));
+if(!i.d.classList.contains('dt')){let n=0;while(n++<12&&placed.some(r=>Math.abs(r[0]-x)<(r[2]+w)/2&&Math.abs(r[1]-(y-h/2))<(r[3]+h)/2))y-=h+4;y=Math.max(h+2,y);placed.push([x,y-h/2,w,h])}
+i.d.style.transform=`translate(${x}px,${y}px) translate(-50%,-100%)`});
+$('#ck').style.display=$('#tk').checked?'block':'none';$('#ck').style.left=(CK/T_END*100)+'%';
+if(document.activeElement!==$('#sl'))$('#sl').value=t;
+$('#k1').textContent=fmt(t)+' / 3:00';$('#k2').textContent=(t<8?'進站':t<CK+DS?'階段 1':'階段 2')+' / '+(t<CK?'支撐':t<CK+DS?'下降':'已降');
+$('#k3').textContent=t<CK?Math.ceil(CK-t)+' 秒':'已過';$('#k4').textContent=S.ev.length;$('#k5').textContent=S.rec.length+' / 4';
+const st=a?(a.cls==='系統'?'系統異常暫停':'作業異常暫停'):t>=T_END?'已完成':playing?'運行中':'暫停';$('#k6').textContent=st;$('#chip').textContent=st;
+document.body.className=a?(a.cls==='系統'?'sys':'op'):'';$('#t1').textContent='即時監控'+(a?' ⚠':'');
+const b=$('#banner');b.hidden=!a;if(a){b.className=a.cls==='系統'?'sys':'';b.innerHTML=`${a.cls==='系統'?'⚠ 系統異常':'⛔ 作業異常'}｜${a.type}<small>${SD[a.sd]}側 ${a.op} · 階段 ${a.phase} · 預期：${dn(a.exp)} · 實際：${dn(a.act)} · 流程已暫停，請處置後解除</small><small>已等待 ${dm(a.age)} · 目前通知第 ${a.esc.length+1} 層（${LV[a.esc.length]}）</small>`}
+$('#ack').disabled=!a;
+$('#dev').innerHTML='<tr><th>裝置</th><th>狀態</th><th>時間</th></tr>'+[['機器手臂L','L'],['機器手臂R','R']].map(([n,s])=>`<tr><td>${n}</td><td class="${S.down[s]?'bad':'good'}">${S.down[s]?'中斷':'連線中'}</td><td>${fmt(S.hb[s])}</td></tr>`).join('')+['承盤','MES','Camera LEFT UP','Camera RIGHT UP','Camera RIGHT'].map(n=>`<tr><td>${n}</td><td class="good">連線中</td><td>${fmt(t)}</td></tr>`).join('');
+const sg=S.ev.map(e=>e.id+e.status).join()+'|'+S.rec.length+'|'+(a?a.id:0);if(sg!==sig){sig=sg;
+$('#evt').innerHTML='<tr><th>時間</th><th>類型</th><th>側／作業員</th><th>處理主管</th><th>耗時</th><th>狀態</th></tr>'+(S.ev.map(e=>`<tr><td>${fmt(e.t)}</td><td class="${e.cls==='系統'?'warn':'bad'}">${e.type}</td><td>${SD[e.sd]} ${e.op}</td><td>${e.handler||'-'}</td><td>${e.dur!=null?dm(e.dur):'-'}</td><td>${e.status}</td></tr>`).join('')||'<tr><td colspan=6 style="color:var(--m)">尚無異常</td></tr>');
+$('#rec').innerHTML='<tr><th>螺絲／Zone</th><th>實測扭矩</th><th>判 OK 範圍</th><th>角度</th><th>耗時</th><th>判定</th></tr>'+(S.rec.map(r=>{const c=SP[r.hole];return`<tr><td>${c.n}<br><small style="color:var(--m)">${c.z} · 步驟 ${c.st} · Pset ${c.ps}</small></td><td>${r.tq} N·m</td><td>${lo(r.hole).toFixed(1)}–${hi(r.hole).toFixed(1)}</td><td>${r.ang}°<br><small style="color:var(--m)">${AL}–${AH}°</small></td><td>${r.dur}s</td><td class="${r.ok==='OK'?'good':'bad'}">${r.ok}</td></tr>`}).join('')||'<tr><td colspan=6 style="color:var(--m)">尚無紀錄</td></tr>');
+Object.keys(SP).forEach(h=>{const r=[...S.rec].reverse().find(x=>x.hole===h);$('#lv-'+h).innerHTML=r?`本車實測 ${r.tq} N·m／${r.ang}° <b class="${r.ok==='OK'?'good':'bad'}">${r.ok}</b>`:'本車尚未鎖附'});
+if(a){const g=[...$('#rs').querySelectorAll('optgroup')].find(o=>o.label.startsWith(a.cls));if(g)$('#rs').value=g.firstChild.value}}}
+let last=performance.now();function loop(n){const dt=(n-last)/1000;last=n;
+const al=S.alert;if(al&&playing){al.age+=dt*RATE*speed;const L=Math.min(3,1+Math.floor(al.age/+$('#esc').value));while(al.esc.length+1<L)al.esc.push({lvl:al.esc.length+2,at:al.age})}
+if(playing&&!S.alert&&S.t<T_END){acc+=dt*RATE*speed;while(acc>=.25){step(.25);acc-=.25}}else acc=0;
+if(S.t>=T_END){playing=false;if(!S.logged){S.logged=1;logRun()}}$('#play').textContent=playing?'暫停':'播放';fdt=Math.min(dt,.1);draw();pip();requestAnimationFrame(loop)}
+// ---- controls ----
+$('#play').onclick=()=>{if(S.t>=T_END)reset();playing=!playing};$('#rst').onclick=()=>{reset();sig=''};
+document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{speed=+b.dataset.s;document.querySelectorAll('[data-s]').forEach(x=>x.classList.toggle('on',x===b))});
+$('#sl').oninput=e=>seek(+e.target.value);
+['#sc','#opL','#opR','#sn','#job'].forEach(s=>$(s).onchange=()=>{reset();sig=''});$('#wo').onchange=()=>{snF();reset();sig=''};
+$('#dL').onclick=()=>S.down.L=true;$('#dR').onclick=()=>S.down.R=true;
+$('#ack').onclick=()=>{const a=S.alert;if(!a)return;a.status='已排除';a.handler=$('#hd').value;a.dur=a.age;a.reason=$('#rs').value;a.note=$('#nt').value;a.resolvedAt=S.t;
+if(a.type==='機器手臂訊號中斷'){S.down[a.sd]=false;S.hb[a.sd]=S.t;S.fixA=1;S.fixC=1;S.raised.delete(a.k)}S.alert=null;$('#nt').value='';sig=''};
+function save(n,c,m){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+c],{type:m}));a.download=n;a.click()}
+function exp(k){const sn=$('#sn').value,o=OP(),m={站別:'引擎組裝站（模擬資料）',VIN:$('#wo').value,工位:$('#stn').value,序號:sn,配方:$('#job').value,情境:$('#sc').selectedOptions[0].text,左側作業員:o.L,右側作業員:o.R,模擬時間:fmt(S.t),匯出時間:new Date().toISOString()};
+const q=v=>`"${String(v??'').replace(/"/g,'""')}"`,r=a=>a.map(q).join(',');
+const c=['## 基本資訊',...Object.entries(m).map(r),'','## 異常事件',r(['編號','時間','來源','類型','側別','作業員','預期','實際','階段','裝置','狀態','原因分類','備註','解除時間','處理主管','耗時秒','升級層級']),
+...S.ev.map(e=>r([e.id,fmt(e.t),e.cls,e.type,SD[e.sd],e.op,dn(e.exp),dn(e.act),e.phase,e.dev,e.status,e.reason,e.note,e.resolvedAt!=null?fmt(e.resolvedAt):'',e.handler,e.dur!=null?Math.round(e.dur):'',e.esc.length+1])),'','## 鎖附紀錄（IoT）',r(['螺絲','Zone','步驟','Pset','作業員','完成時間','耗時秒','實測扭矩N·m','目標扭力N·m','判OK下限','判OK上限','角度°','角度下限','角度上限','判定']),
+...S.rec.map(x=>r([SP[x.hole].n,SP[x.hole].z,SP[x.hole].st,SP[x.hole].ps,x.op,fmt(x.t),x.dur,x.tq,SP[x.hole].tq,lo(x.hole).toFixed(1),hi(x.hole).toFixed(1),x.ang,AL,AH,x.ok]))];save(`incident_${sn}.csv`,c.join('\n'),'text/csv')}
+const xe=v=>dn(v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const NOTE={'降前鎖附':'承盤尚未下降就開始第二階段鎖附。依訪談，這可能造成螺絲鎖附不確實、歪斜或位置偏移。','超過鎖附時間':'第一階段鎖附未在檢查點前 2 秒完成。','錯誤步驟':'作業順序未依 SOP 進行。','扭力不足':'鎖附完成時 IoT 回報的扭矩低於門檻，螺絲可能未鎖緊，需複鎖或確認。依訪談，扭力不足屬於潛在品質瑕疵。','機器手臂訊號中斷':'機器手臂心跳逾時，無法確認鎖附結果與扭矩。','視覺與 IoT 不一致':'視覺判定與 IoT 鎖附紀錄不一致，需人工確認。'};
+function report(){const sn=$('#sn').value,o=OP(),E=S.ev,R=S.rec;
+const sum=E.length?E.map(e=>`${fmt(e.t)} 於階段 ${e.phase}，${SD[e.sd]}側（${e.op}）發生「${e.type}」（${e.cls}異常），${e.status==='已排除'?`由 ${e.handler} 於 ${dm(e.dur)} 內排除`:'尚未處置'}。`).join('<br>'):'本次流程未偵測到異常。';
+const css='body{font:15px/1.7 "Noto Sans TC","Microsoft JhengHei",sans-serif;max-width:760px;margin:32px auto;padding:0 20px;color:#1b2333}h1{font-size:24px;margin:0}h2{font-size:16px;border-bottom:2px solid #38bdf8;padding-bottom:4px;margin-top:28px}table{width:100%;border-collapse:collapse;font-size:13px}td,th{border-bottom:1px solid #d8deea;padding:5px;text-align:left}.s{background:#f1f5fb;border-left:4px solid #38bdf8;padding:10px 14px}.m{color:#6b7790;font-size:12px}';
+const body=`<h1>異常事件摘要報告</h1><div class="m">模擬資料 · 產生時間 ${new Date().toLocaleString('zh-TW')}</div><h2>一句話摘要</h2><div class="s">${sum}</div>
+<h2>案件資訊</h2><table><tr><td>工站</td><td>引擎組裝站（${$('#stn').value}）</td><td>配方</td><td>${xe($('#job').value)}</td></tr><tr><td>VIN</td><td>${$('#wo').value}</td><td>序號</td><td>${sn}</td></tr><tr><td>左側作業員</td><td>${o.L}</td><td>右側作業員</td><td>${o.R}</td></tr></table>
+<h2>事件經過</h2>${E.map(e=>`<p><b>#${e.id} ${xe(e.type)}</b>（${e.cls}異常，${fmt(e.t)}，階段 ${e.phase}）<br>預期：${xe(e.exp)}；實際：${xe(e.act)}<br>${NOTE[e.type]||''}<br>處置：${e.status==='已排除'?`${e.handler}，耗時 ${dm(e.dur)}，原因：${xe(e.reason)}${e.note?'，備註：'+xe(e.note):''}`:'未處理'}<br>升級紀錄：${e.esc.length?e.esc.map(x=>`第 ${x.lvl} 層（${LV[x.lvl-1]}）於等待 ${dm(x.at)} 時通知`).join('；'):'未升級'}</p>`).join('')||'<p>無</p>'}
+<h2>IoT 鎖附數據</h2><table><tr><th>螺絲（Zone）</th><th>作業員</th><th>實測扭矩</th><th>判 OK 範圍</th><th>角度</th><th>耗時</th><th>判定</th></tr>${R.map(r=>`<tr><td>${SP[r.hole].n}（${SP[r.hole].z}，Pset ${SP[r.hole].ps}）</td><td>${r.op}</td><td>${r.tq} N·m</td><td>${lo(r.hole).toFixed(1)}–${hi(r.hole).toFixed(1)}</td><td>${r.ang}°（${AL}–${AH}）</td><td>${r.dur} 秒</td><td>${r.ok}</td></tr>`).join('')||'<tr><td colspan=7>尚無紀錄</td></tr>'}</table>`;
+save(`report_${sn}.html`,`<!DOCTYPE html><html lang="zh-Hant"><meta charset="utf-8"><title>異常事件摘要報告 ${sn}</title><style>${css}</style>${body}`,'text/html')}
+$('#xr').onclick=report;$('#xc').onclick=()=>exp('c');$('#xp').onclick=()=>print();
+function mk(q){let x=7;const r=()=>(x=x*16807%2147483647)/2147483647,pk=a=>a[Math.floor(r()*a.length)],out=[];
+for(let i=0;i<50;i++){const ev=[],add=(type,cls,hole)=>ev.push({type,cls,hole,dur:40+Math.floor(r()*200),esc:r()<.15?1:0}),sd=()=>pk(['L','R']),HL=['L1','L2','R1','R2'];
+if(r()<q[0])add('降前鎖附','作業',sd()+'2');if(r()<q[1])add('超過鎖附時間','作業',sd()+'1');if(r()<q[2])add('錯誤步驟','作業',pk(HL));if(r()<q[3])add('扭力不足','作業',pk(HL));
+if(r()<q[4])add('機器手臂訊號中斷','系統',null);if(r()<q[5])add('視覺與 IoT 不一致','系統',pk(HL));out.push({ok:!ev.some(e=>e.cls==='作業'),ev})}return out}
+const QS={after:[.06,.02,.01,.02,.02,.01],before:[.24,.04,.03,.05,.04,.03]};let SESSION=[],DEMO=mk(QS.after);
+function logRun(){SESSION.push({ok:!S.ev.some(e=>e.cls==='作業'),ev:S.ev.map(e=>({type:e.type,cls:e.cls,hole:(e.act.match(/[LR][12]/)||[])[0]||null,dur:e.dur,esc:e.esc.length}))});if(!$('#pg2').hidden)renderStats()}
+function renderStats(){const on=$('#sdemo').checked,runs=(on?DEMO:[]).concat(SESSION),n=runs.length,P=(a,b)=>Math.round(a/b*1000)/10;
+const ev=runs.flatMap(r=>r.ev),ok=runs.filter(r=>r.ok).length,hd=ev.filter(e=>e.dur!=null),sf=runs.filter(r=>!r.ev.some(e=>e.cls==='系統')).length;
+const K=[['總台數',n],['一次通過率',n?P(ok,n)+'%':'-'],['攔截作業異常率',n?P(n-ok,n)+'%':'-'],['平均處置時間',hd.length?dm(hd.reduce((a,e)=>a+e.dur,0)/hd.length):'-'],['升級率',ev.length?P(ev.filter(e=>e.esc>0).length,ev.length)+'%':'-'],['系統可用率',n?P(sf,n)+'%':'-']];
+$('#skpi').innerHTML=K.map(([a,b])=>`<div><span>${a}</span><b>${b}</b></div>`).join('');
+const T=['降前鎖附','超過鎖附時間','錯誤步驟','扭力不足','機器手臂訊號中斷','視覺與 IoT 不一致'],C=T.map(t=>ev.filter(e=>e.type===t).length),mx=Math.max(1,...C);
+$('#sdist').innerHTML=T.map((t,i)=>`<div class="hb"><span>${t}</span><i class="${i>3?'y':''}" style="width:${C[i]/mx*100}%"></i><b>${C[i]}</b></div>`).join('');
+$('#shole').innerHTML=['L1','L2','R2','R1'].map(h=>{const c=ev.filter(e=>e.cls==='作業'&&e.hole===h).length,v=n?P(n-c,n):0,col=v>=98?'var(--ok)':v>=90?'var(--sy)':'var(--op)';return`<div class="hc" style="border-color:${col}"><b>${HN[h]}</b><br>${n?v+'%':'-'}<small>異常 ${c} 次</small></div>`}).join('');
+const pts=runs.map((_,i)=>{const w=runs.slice(Math.max(0,i-9),i+1);return w.filter(r=>r.ok).length/w.length}).slice(-40);
+$('#strend').innerHTML=pts.length<2?'<small style="color:var(--m)">資料不足，至少需要 2 台。</small>':`<svg viewBox="0 0 400 120" style="width:100%;height:auto"><line x1="30" x2="390" y1="10" y2="10" style="stroke:var(--ok);stroke-dasharray:4 3"/><text x="32" y="8" style="fill:var(--ok);font-size:9px">目標 100%</text><line x1="30" x2="390" y1="60" y2="60" style="stroke:var(--l)"/><line x1="30" x2="390" y1="110" y2="110" style="stroke:var(--l)"/><text x="2" y="14" style="fill:var(--m);font-size:9px">100%</text><text x="6" y="64" style="fill:var(--m);font-size:9px">50%</text><text x="10" y="114" style="fill:var(--m);font-size:9px">0%</text><polyline style="fill:none;stroke:var(--ac);stroke-width:2" points="${pts.map((v,i)=>`${30+i*360/(pts.length-1)},${10+(1-v)*100}`).join(' ')}"/></svg><small style="color:var(--m)">橫軸為台次（最近 ${pts.length} 台）</small>`;
+window.ST={n,ok,T,C,ev,sf,on};$('#smeta').textContent=`資料：${on?DEMO.length+' 台示範資料 + ':''}${SESSION.length} 台本次操作`}
+function pdf(){renderStats();const{n,ok,T,C,ev,sf,on}=ST;if(!n){alert('目前沒有資料可匯出，請先勾選示範資料，或跑完一台完整流程。');return}
+const top=C.indexOf(Math.max(...C)),hs=['L1','L2','R2','R1'].map(h=>[h,ev.filter(e=>e.cls==='作業'&&e.hole===h).length]).sort((a,b)=>b[1]-a[1])[0],hd=ev.filter(e=>e.dur!=null);
+const L=[`共 ${n} 台，一次通過 ${ok} 台，一次通過率 ${Math.round(ok/n*1000)/10}%。`,ev.length?`系統共攔截 ${ev.length} 件異常，最常見的是「${T[top]}」（${C[top]} 件）。`:'本範圍內未偵測到異常。',hs[1]?`作業異常最集中的螺絲是 ${HN[hs[0]]}（${hs[1]} 件）。`:'',hd.length?`異常平均處置時間 ${dm(hd.reduce((a,e)=>a+e.dur,0)/hd.length)}。`:'',`系統可用率 ${Math.round(sf/n*1000)/10}%（扣除發生系統異常的台數）。`].filter(Boolean);
+const css=`:root{--ok:#16a34a;--op:#dc2626;--sy:#d97706;--ac:#0284c7;--l:#d8deea;--m:#6b7790}@page{size:A4;margin:14mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{font:13px/1.6 "Noto Sans TC","Microsoft JhengHei",sans-serif;color:#1b2333;margin:0}h1{font-size:22px;margin:0}h2{font-size:14px;border-bottom:2px solid #38bdf8;padding-bottom:3px;margin:16px 0 8px}.m{color:#6b7790;font-size:11px}.w{background:#fff7e6;border-left:4px solid #d97706;padding:6px 10px;font-size:12px;margin-top:8px}.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.kv div{border:1px solid #d8deea;border-radius:6px;padding:6px 8px}.kv b{display:block;font-size:17px}.kv span{font-size:11px;color:#6b7790}.hb{display:grid;grid-template-columns:130px 1fr 30px;gap:6px;align-items:center;margin:3px 0}.hb i{display:block;height:11px;border-radius:3px;background:#dc2626}.hb i.y{background:#d97706}.hb b{text-align:right}.hg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.hc{border:2px solid;border-radius:8px;padding:6px;text-align:center}.hc b{font-size:16px}.hc small{display:block;color:#6b7790;font-size:10px}svg{width:100%;height:auto}ul{margin:0;padding-left:18px}`;
+const doc=`<!DOCTYPE html><html lang="zh-Hant"><meta charset="utf-8"><title>品質總覽報告摘要</title><style>${css}</style><h1>品質總覽報告摘要</h1><div class="m">引擎組裝站（${$('#stn').value}） · 產生時間 ${new Date().toLocaleString('zh-TW')}</div><div class="w">${$('#smeta').textContent}。本報告為模擬資料，${on?'示範情境：'+$('#sbase').selectedOptions[0].text+'，非實測數據。':'僅含本次操作結果。'}</div><h2>重點摘要</h2><ul>${L.map(x=>`<li>${x}</li>`).join('')}</ul><h2>關鍵指標</h2><div class="kv">${$('#skpi').innerHTML}</div><h2>系統攔截的異常類型</h2>${$('#sdist').innerHTML}<h2>孔位通過率</h2><div class="hg">${$('#shole').innerHTML}</div><h2>一次通過率趨勢</h2>${$('#strend').innerHTML}<h2>定義與限制</h2><div class="m">一次通過＝該台無作業異常（含扭力不足）；系統異常另列於系統可用率，不計入良率。孔位通過率為「異常發生在該孔位的比例」，非 IoT 逐孔量測的合格率。孔位顏色門檻（98%、90%）為示範設定。</div>`;
+const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';document.body.appendChild(f);
+f.onload=()=>{f.contentWindow.focus();f.contentWindow.print();setTimeout(()=>f.remove(),60000)};f.srcdoc=doc}
+function tab(k){$('#bar').hidden=$('#pg1').hidden=k!==1;$('#pg2').hidden=k!==2;$('#t1').classList.toggle('on',k===1);$('#t2').classList.toggle('on',k===2);k===1?size():renderStats()}
+$('#t1').onclick=()=>tab(1);$('#spdf').onclick=pdf;$('#t2').onclick=()=>tab(2);$('#sdemo').onchange=renderStats;$('#sbase').onchange=()=>{DEMO=mk(QS[$('#sbase').value]);renderStats()};$('#sreset').onclick=()=>{SESSION=[];renderStats()};
+const r2=new THREE.WebGLRenderer({canvas:$('#cv2'),antialias:true}),c2=new THREE.PerspectiveCamera(50,16/9,.05,100),pp=new THREE.Vector3(...CAMS[0][1]),pt=new THREE.Vector3(...CAMS[0][2]),RM=matchMedia('(prefers-reduced-motion: reduce)');
+let sel=-1,pf=50,fdt=.016;
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{sel=+b.dataset.p;document.querySelectorAll('[data-p]').forEach(x=>x.classList.toggle('on',x===b))});
+function pip(){const a=S.alert,ci=sel<0?(a&&a.sd==='R'?1:0):sel,cp=new THREE.Vector3(...CAMS[ci][1]);let tg=new THREE.Vector3(...CAMS[ci][2]),fv=50;
+if(a&&sel<0){const hn=(a.act.match(/[LR][12]/)||[])[0];tg=hn?new THREE.Vector3(H[hn][0],Y0,H[hn][1]):new THREE.Vector3(...tool(a.sd,S.t).p);fv=26}
+const k=RM.matches?1:1-Math.exp(-fdt*6);pp.lerp(cp,k);pt.lerp(tg,k);pf+=(fv-pf)*k;
+c2.position.copy(pp);c2.lookAt(pt);c2.fov=pf;c2.updateProjectionMatrix();camG.visible=false;r2.render(scene,c2);
+$('#pipl').textContent=CAMS[ci][0]+' · '+(a&&sel<0?`異常特寫｜${SD[a.sd]}側 ${a.type}`:'待命');
+$('#pipw').style.borderColor=a?(a.cls==='系統'?'var(--sy)':'var(--op)'):'var(--l)'}
+reset();size();requestAnimationFrame(loop);
+</script></body></html>
